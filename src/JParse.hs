@@ -40,8 +40,15 @@ conditional f =
 char :: Char -> Parser Char
 char ch = conditional (== ch)
 
+isWhiteSpace :: Char -> Bool
+isWhiteSpace ' '  = True
+isWhiteSpace '\t' = True
+isWhiteSpace '\n' = True
+isWhiteSpace '\r' = True
+isWhiteSpace _    = False
+
 space :: Parser Char
-space = char ' ' <|> char '\t' <|> char '\n' <|> char '\r'
+space = conditional isWhiteSpace
 
 spaces :: Parser String
 spaces = many space
