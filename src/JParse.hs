@@ -40,3 +40,7 @@ space = char ' ' <|> char '\t' <|> char '\n' <|> char '\r'
 
 spaces :: Parser String 
 spaces = many space
+
+
+string :: String -> Parser String 
+string = mapM char
