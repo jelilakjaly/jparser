@@ -36,5 +36,3 @@ sectionHeader = bracketed bracketOpen sectionName bracketClose
 name :: Parser String 
 name = some alphanum
 
-quote :: Parser Char 
-quote = char '\"'
