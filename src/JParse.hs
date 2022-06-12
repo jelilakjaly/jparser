@@ -1,6 +1,7 @@
 module JParse where
 
 import           Control.Applicative
+import           Data.Char
 
 newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
 
@@ -28,19 +29,26 @@ instance Alternative Parser where
         Just v  -> Just v
 
 
+conditional :: (Char -> Bool) -> Parser Char
+conditional f =
+    let parsefunc []             = Nothing
+        parsefunc (x : xs) | f x = Just (x, xs)
+        parsefunc _              = Nothing
+    in  Parser parsefunc
+
+
 char :: Char -> Parser Char
-char ch = Parser charP
-  where
-    charP :: String -> Maybe (Char, String)
-    charP []       = Nothing
-    charP (x : xs) = if x == ch then Just (x, xs) else Nothing
+char ch = conditional (== ch)
 
 space :: Parser Char
 space = char ' ' <|> char '\t' <|> char '\n' <|> char '\r'
 
-spaces :: Parser String 
+spaces :: Parser String
 spaces = many space
 
 
-string :: String -> Parser String 
+string :: String -> Parser String
 string = mapM char
+
+alphanum :: Parser Char
+alphanum = conditional isAlphaNum
