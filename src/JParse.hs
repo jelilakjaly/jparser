@@ -63,5 +63,5 @@ alphanum = conditional isAlphaNum
 quote :: Parser Char 
 quote = char '\"'
 
-quotedChar :: Parser Char 
-quotedChar = conditional (\c -> isAlphaNum c || isWhiteSpace c)
+alphaNumSpace :: Parser Char 
+alphaNumSpace = conditional (\c -> isAlphaNum c || isWhiteSpace c)
