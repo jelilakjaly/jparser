@@ -12,8 +12,8 @@ instance Functor Parser where
 instance Applicative Parser where
     pure x = Parser $ \s -> Just (x, s)
     Parser sfs <*> Parser sas = Parser $ \s -> do
-        (f, s') <- sfs s 
-        (a, s'') <- sas s' 
+        (f, s' ) <- sfs s
+        (a, s'') <- sas s'
         return (f a, s'')
 
 instance Monad Parser where
@@ -27,3 +27,16 @@ instance Alternative Parser where
         Nothing -> y s
         Just v  -> Just v
 
+
+char :: Char -> Parser Char
+char ch = Parser charP
+  where
+    charP :: String -> Maybe (Char, String)
+    charP []       = Nothing
+    charP (x : xs) = if x == ch then Just (x, xs) else Nothing
+
+space :: Parser Char
+space = char ' ' <|> char '\t' <|> char '\n' <|> char '\r'
+
+spaces :: Parser String 
+spaces = many space
