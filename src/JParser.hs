@@ -1,4 +1,4 @@
-module JParse where
+module JParser where
 
 import           Control.Applicative
 import           Data.Char

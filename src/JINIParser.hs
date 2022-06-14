@@ -1,9 +1,9 @@
-module JINIParse where
+module JINIParser where
 
 import Control.Applicative
 import Data.Map hiding (empty)
 
-import JParse
+import JParser
 
 -- sample INI file
 -- 

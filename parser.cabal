@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               jParse
+name:               jparser
 version:            0.1.0.0
 synopsis:
 
@@ -19,7 +19,7 @@ category:           Text
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  JParse JINIParse
+    exposed-modules:  JParser JINIParser
 
     -- Modules included in this library but not exported.
     -- other-modules:
