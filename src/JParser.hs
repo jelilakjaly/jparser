@@ -52,8 +52,8 @@ spacesP :: Parser String
 spacesP = many spaceP
 
 
-string :: String -> Parser String
-string = mapM charP
+stringP :: String -> Parser String
+stringP = mapM charP
 
 alphanumP :: Parser Char
 alphanumP = cond isAlphaNum
