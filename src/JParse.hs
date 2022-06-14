@@ -24,9 +24,7 @@ instance Monad Parser where
 
 instance Alternative Parser where
     empty = Parser $ const Nothing
-    Parser x <|> Parser y = Parser $ \s -> case x s of
-        Nothing -> y s
-        Just v  -> Just v
+    Parser x <|> Parser y = Parser $ \s -> x s <|> y s
 
 
 conditional :: (Char -> Bool) -> Parser Char
