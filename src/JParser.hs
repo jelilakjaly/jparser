@@ -27,16 +27,12 @@ instance Alternative Parser where
     Parser x <|> Parser y = Parser $ \s -> x s <|> y s
 
 
-conditional :: (Char -> Bool) -> Parser Char
-conditional f =
+cond :: (Char -> Bool) -> Parser Char
+cond f =
     let parsefunc []             = Nothing
         parsefunc (x : xs) | f x = Just (x, xs)
         parsefunc _              = Nothing
     in  Parser parsefunc
-
-
-char :: Char -> Parser Char
-char ch = conditional (== ch)
 
 isWhiteSpace :: Char -> Bool
 isWhiteSpace ' '  = True
@@ -45,21 +41,25 @@ isWhiteSpace '\n' = True
 isWhiteSpace '\r' = True
 isWhiteSpace _    = False
 
-space :: Parser Char
-space = conditional isWhiteSpace
 
-spaces :: Parser String
-spaces = many space
+charP :: Char -> Parser Char
+charP ch = cond (== ch)
+
+spaceP :: Parser Char
+spaceP = cond isWhiteSpace
+
+spacesP :: Parser String
+spacesP = many spaceP
 
 
 string :: String -> Parser String
-string = mapM char
+string = mapM charP
 
-alphanum :: Parser Char
-alphanum = conditional isAlphaNum
+alphanumP :: Parser Char
+alphanumP = cond isAlphaNum
 
-quote :: Parser Char 
-quote = char '\"'
+quoteP :: Parser Char 
+quoteP = charP '\"'
 
-alphaNumSpace :: Parser Char 
-alphaNumSpace = conditional (\c -> isAlphaNum c || isWhiteSpace c)
+alphaNumSpaceP :: Parser Char 
+alphaNumSpaceP = cond (\c -> isAlphaNum c || isWhiteSpace c)

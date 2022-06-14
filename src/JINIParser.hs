@@ -26,23 +26,23 @@ bracketed pa pb pc = do
     return b
 
 bracketOpen :: Parser Char 
-bracketOpen = char '['
+bracketOpen = charP '['
 
 bracketClose :: Parser Char 
-bracketClose = char ']'
+bracketClose = charP ']'
 
 
 sectionName :: Parser String 
-sectionName = bracketed spaces (some alphanum) spaces
+sectionName = bracketed spacesP (some alphanumP) spacesP
 
 sectionHeader :: Parser String 
 sectionHeader = bracketed bracketOpen sectionName bracketClose
 
 name :: Parser String 
-name = some alphanum
+name = some alphanumP
 
 quotedValue :: Parser String 
-quotedValue = bracketed quote (many alphaNumSpace) quote
+quotedValue = bracketed quoteP (many alphaNumSpaceP) quoteP
 
 value :: Parser String 
 value = name <|> quotedValue
@@ -52,11 +52,11 @@ value = name <|> quotedValue
 -- we ignore the whitespace around these
 assignment :: Parser (String, String)
 assignment = do 
-    spaces
+    spacesP
     name <- name 
-    spaces 
-    char '='
-    spaces 
+    spacesP
+    charP '='
+    spacesP 
     value <- value 
     return (name, value)
 
@@ -64,13 +64,13 @@ assignment = do
 -- A section has a section header and name-value pairs 
 -- separated by '=' character
 newline :: Parser Char 
-newline = char '\n' <|> char '\r'
+newline = charP '\n' <|> charP '\r'
 
 newlines :: Parser ()
 newlines = many newline >> return ()
 
 blank :: Parser ()
-blank = spaces >> newline >> return ()
+blank = spacesP >> newline >> return ()
 
 blanks :: Parser ()
 blanks = many blank >> return ()
@@ -81,7 +81,7 @@ assignments = fromList <$> many (blanks >> assignment)
 section :: Parser (String, Variables)
 section = do 
     blanks 
-    spaces 
+    spacesP 
     name <- sectionHeader
     blanks 
     variables <- assignments 
