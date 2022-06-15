@@ -26,10 +26,10 @@ bracketed pa pb pc = do
     return b
 
 bracketOpen :: Parser Char 
-bracketOpen = charP '['
+bracketOpen = mkCharP '['
 
 bracketClose :: Parser Char 
-bracketClose = charP ']'
+bracketClose = mkCharP ']'
 
 
 sectionName :: Parser String 
@@ -55,7 +55,7 @@ assignment = do
     spacesP
     name <- name 
     spacesP
-    charP '='
+    mkCharP '='
     spacesP 
     value <- value 
     return (name, value)
@@ -64,7 +64,7 @@ assignment = do
 -- A section has a section header and name-value pairs 
 -- separated by '=' character
 newline :: Parser Char 
-newline = charP '\n' <|> charP '\r'
+newline = mkCharP '\n' <|> mkCharP '\r'
 
 newlines :: Parser ()
 newlines = many newline >> return ()

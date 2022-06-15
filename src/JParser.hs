@@ -42,8 +42,8 @@ isWhiteSpace '\r' = True
 isWhiteSpace _    = False
 
 
-charP :: Char -> Parser Char
-charP ch = cond (== ch)
+mkCharP :: Char -> Parser Char
+mkCharP ch = cond (== ch)
 
 spaceP :: Parser Char
 spaceP = cond isWhiteSpace
@@ -52,14 +52,14 @@ spacesP :: Parser String
 spacesP = many spaceP
 
 
-stringP :: String -> Parser String
-stringP = mapM charP
+mkStringP :: String -> Parser String
+mkStringP = mapM mkCharP
 
 alphanumP :: Parser Char
 alphanumP = cond isAlphaNum
 
 quoteP :: Parser Char 
-quoteP = charP '\"'
+quoteP = mkCharP '\"'
 
 alphaNumSpaceP :: Parser Char 
 alphaNumSpaceP = cond (\c -> isAlphaNum c || isWhiteSpace c)
