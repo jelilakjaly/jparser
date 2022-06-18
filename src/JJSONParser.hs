@@ -1,8 +1,10 @@
 module JJSONParser where
 
 import           Control.Applicative
+import           Control.Monad
 import           Data.Char
 import           JParser
+import           Numeric
 
 data JValue =
       JNull
@@ -13,7 +15,7 @@ data JValue =
     | JObject [(String, JValue)]
     deriving (Show, Eq)
 
-jValueP :: Parser JValue 
+jValueP :: Parser JValue
 jValueP = jNullP <|> jBoolP <|> jNumberP <|> jStringP <|> jArrayP <|> jObjectP
 
 jNullP :: Parser JValue
@@ -38,86 +40,98 @@ jNumberP :: Parser JValue
 jNumberP = JNumber <$> intP
 
 
-stringP :: Parser String
-stringP = Parser go
+
+parseIf :: (Char -> Bool) -> Parser Char
+parseIf f = Parser go
   where
-    go []  = Nothing
-    go str = Just $ span (/= '"') str
+    go :: String -> Maybe (Char, String)
+    go (x : xs) | f x = Just (x, xs)
+    go _              = Nothing
+
+escapeUnicodeP :: Parser Char
+escapeUnicodeP =
+    chr . fst . head . readHex <$> replicateM 4 (parseIf isHexDigit)
+
+escapeCharP :: Parser Char
+escapeCharP =
+    ('"' <$ mkStringP "\\\"")
+        <|> ('\\' <$ mkStringP "\\\\")
+        <|> ('/' <$ mkStringP "\\/")
+        <|> ('\b' <$ mkStringP "\\b")
+        <|> ('\f' <$ mkStringP "\\f")
+        <|> ('\n' <$ mkStringP "\\n")
+        <|> ('\r' <$ mkStringP "\\r")
+        <|> ('\t' <$ mkStringP "\\t")
+        <|> (mkStringP "\\u" *> escapeUnicodeP)
+
+normalCharP :: Parser Char
+normalCharP = parseIf ((&&) <$> (/= '"') <*> (/= '\\'))
+
+stringLiteralP :: Parser String
+stringLiteralP = quoteP *> many (normalCharP <|> escapeCharP) <* quoteP
 
 jStringP :: Parser JValue
-jStringP = JString <$> (quoteP *> stringP <* quoteP)
-
---    (*>) :: f a -> f b -> f b
---    a1 *> a2 = (id <$ a1) <*> a2
-
-{-
-jStringP :: Parser JValue
-jStringP = do
-    quoteP
-    str <- stringP
-    quoteP
-    return $ JString str
--}
+jStringP = JString <$> stringLiteralP 
 
 bracketOpenP :: Parser Char
 bracketOpenP = mkCharP '['
 
-bracketCloseP :: Parser Char 
+bracketCloseP :: Parser Char
 bracketCloseP = mkCharP ']'
 
-commaP :: Parser Char 
+commaP :: Parser Char
 commaP = mkCharP ','
 
 sepBy :: Parser a -> Parser b -> Parser [b]
 sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
 
-jArrayP :: Parser JValue 
-jArrayP = do 
+jArrayP :: Parser JValue
+jArrayP = do
     bracketOpenP
-    spacesP 
+    spacesP
     vals <- sepBy (spacesP *> commaP <* spacesP) jValueP
     spacesP
     bracketCloseP
-    return $ JArray vals 
+    return $ JArray vals
 
 
-braceOpenP :: Parser Char 
+braceOpenP :: Parser Char
 braceOpenP = mkCharP '{'
 
-braceCloseP :: Parser Char 
+braceCloseP :: Parser Char
 braceCloseP = mkCharP '}'
 
-colonP :: Parser Char 
+colonP :: Parser Char
 colonP = mkCharP ':'
 
-keyP :: Parser String 
-keyP = Parser go 
-    where 
-        go [] = Nothing 
-        go str = Just (span (/= ':') str)
+keyP :: Parser String
+keyP = Parser go
+  where
+    go []  = Nothing
+    go str = Just (span (/= ':') str)
 
 objectP :: Parser (String, JValue)
-objectP = do 
+objectP = do
     key <- keyP
     spacesP
     mkCharP ':'
-    spacesP 
-    val <- jValueP 
+    spacesP
+    val <- jValueP
     spacesP
     return (key, val)
 
 
-jObjectP :: Parser JValue 
-jObjectP = do 
+jObjectP :: Parser JValue
+jObjectP = do
     braceOpenP
     spacesP
     vals <- sepBy (spacesP *> commaP <* spacesP) objectP
     spacesP
-    braceCloseP 
+    braceCloseP
     return $ JObject vals
 
 
 parseFile :: FilePath -> Parser a -> IO (Maybe a)
-parseFile filePath parser = do 
-    input <- readFile filePath 
+parseFile filePath parser = do
+    input <- readFile filePath
     return (fst <$> runParser parser input)
