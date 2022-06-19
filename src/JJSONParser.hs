@@ -9,7 +9,7 @@ import           Numeric
 data JValue =
       JNull
     | JBool Bool
-    | JNumber Integer
+    | JNumber Double
     | JString String
     | JArray [JValue]
     | JObject [(String, JValue)]
@@ -24,6 +24,7 @@ jNullP = JNull <$ mkStringP "null"
 jBoolP :: Parser JValue
 jBoolP = JBool True <$ mkStringP "true" <|> JBool False <$ mkStringP "false"
 
+{-
 intCharP :: Parser Char
 intCharP = Parser go
   where
@@ -35,10 +36,30 @@ intStringP = some intCharP
 
 intP :: Parser Integer
 intP = read <$> intStringP
+-}
+
+doubleFromParts :: Integer -- sign
+                -> Integer -- integral part
+                -> Double  -- decimal part
+                -> Integer -- exponent
+                -> Double
+doubleFromParts sign int dec expo = 
+    fromIntegral sign * (fromInteger int + dec) * (10 ^^ expo)
+
+doubleLiteral :: Parser Double 
+doubleLiteral = doubleFromParts
+    <$> (minus <|> pure 1)
+    <*> (read <$> digits)
+    <*> ((read <$> (('0':) <$> ((:) <$> mkCharP '.' <*> digits))) <|> pure 0)
+    <*> ((e *> ((*) <$> (plus <|> minus <|> pure 1) <*> (read <$> digits))) <|> pure 0)
+    where 
+        digits = some $ parseIf isDigit
+        minus = (-1) <$ mkCharP '-'
+        plus = 1 <$ mkCharP '+'
+        e = mkCharP 'e' <|> mkCharP 'E'
 
 jNumberP :: Parser JValue
-jNumberP = JNumber <$> intP
-
+jNumberP = JNumber <$> doubleLiteral
 
 
 parseIf :: (Char -> Bool) -> Parser Char
